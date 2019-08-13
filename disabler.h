@@ -17,7 +17,7 @@ struct dev_dis_info {
     int vid;
     int pid;
     //usb device's idVendor and idProduct
-    int disable;
+    //int disable;
     //flag of usb device disabled or not
     //1,if disabled; 0, if enabled;
 };

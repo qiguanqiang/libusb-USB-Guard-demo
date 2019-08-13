@@ -371,6 +371,7 @@ void device_init(libusb_device **&devs) {
         default:
             break;
         }
+       // uninstall_device(devs[i]);
         libusb_close(handle);
         i++;
     }
