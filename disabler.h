@@ -2,6 +2,8 @@
 #include "vector"
 #include "fstream"
 
+#define DISABLE_LIST_FILE_PATH "disable_list"
+
 #define OPEN_FILE_ERROR -1
 
 //In function is_device_disabled(int vid, int pid):
