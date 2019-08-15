@@ -10,6 +10,7 @@ libusb_context *context = NULL;
 void test_qt_tree() {
     QTreeWidget *treeWidget = new QTreeWidget();
     treeWidget->setColumnCount(1);
+    treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     QList<QTreeWidgetItem *> items;
 
     //treeWidget->insertTopLevelItems(0, items);
@@ -74,8 +75,8 @@ int main(int argc, char *argv[])
     }
 
     QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
+//    MainWindow w;
+//    w.show();
 
     get_device_list(devs,context);
     device_init(devs);
@@ -101,9 +102,9 @@ int main(int argc, char *argv[])
     }
 
     test_qt_tree();
-    while(1) {
-        libusb_handle_events(context);
-    }
+//    while(1) {
+//        libusb_handle_events(context);
+//    }
 
     libusb_hotplug_deregister_callback(context, cb_handle);
     libusb_free_device_list(devs,1);

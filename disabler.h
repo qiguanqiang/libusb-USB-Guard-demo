@@ -35,5 +35,7 @@ private:
 public:
     int is_device_disabled(int vid, int pid);
     int device_in_list(int vid, int pid);
+    int disable_record(int vid, int pid);
+    int enable_record(int vid, int pid);
 };
 

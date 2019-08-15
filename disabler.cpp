@@ -21,7 +21,7 @@ int disabler::is_device_disabled(int vid, int pid) {
     return ENABLED;
 }
 
-int diabler::disable_record(int vid, int pid) {
+int disabler::disable_record(int vid, int pid) {
     /*dev_dis_info tmp;
     vector<dev_dis_info> vec;
 
@@ -44,7 +44,7 @@ int diabler::disable_record(int vid, int pid) {
     return EXIT_SUCCESS;
 }
 
-int diabler::enable_record(int vid, int pid) {
+int disabler::enable_record(int vid, int pid) {
     dev_dis_info tmp;
     vector<dev_dis_info> vec;
 
@@ -57,12 +57,13 @@ int diabler::enable_record(int vid, int pid) {
         file_in >> tmp.vid >> tmp.pid;
         vec.push_back(tmp);
     }
-    vec.popback();
+    vec.pop_back();
     file_in.close();
 
     ofstream file_out(DISABLE_LIST_FILE_PATH, ios::out);
     if(vec.size() == 1) { //only one element
-        if(vec.end().vid && vec.end().pid == pid) {
+        tmp = vec.back();
+        if(tmp.vid == vid && tmp.pid == pid) {
             file_out.close();
             return EXIT_SUCCESS;
         }else {
