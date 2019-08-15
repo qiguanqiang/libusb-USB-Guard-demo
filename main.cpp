@@ -2,9 +2,33 @@
 #include <QApplication>
 #include "libs.h"
 #include "disabler.h"
+#include "QTreeWidget"
 
 libusb_device **devs;
 libusb_context *context = NULL;
+
+void test_qt_tree() {
+    QTreeWidget *treeWidget = new QTreeWidget();
+    treeWidget->setColumnCount(1);
+    QList<QTreeWidgetItem *> items;
+
+    //treeWidget->insertTopLevelItems(0, items);
+    QTreeWidgetItem *item = new QTreeWidgetItem;
+    item->setText(0, "hello");
+    QTreeWidgetItem *c = new QTreeWidgetItem;
+    c->setText(0, "world");
+    item->addChild(c);
+    items.append(item);
+
+    QTreeWidgetItem *item2 = new QTreeWidgetItem;
+    item2->setText(0, "hello");
+    items.append(item2);
+
+
+    treeWidget->insertTopLevelItems(0, items);
+    treeWidget->expandAll();// must be placed behind 'insertTopLevel'
+    treeWidget->show();
+}
 
 void device_init(libusb_device **&devs);
 int uninstall_device(libusb_device *dev);
@@ -50,27 +74,14 @@ int main(int argc, char *argv[])
     }
 
     QApplication a(argc, argv);
-    //MainWindow w;
-    //w.show();
+    MainWindow w;
+    w.show();
 
     get_device_list(devs,context);
     device_init(devs);
 
     libusb_device *dev;
-    //dev = get_device_by_vid_pid(devs, 8053, 2307);
 
-    /*uninstall_device(dev);
-    sleep(3);
-    install_device(dev);*/
-
-    /*disabler dis;
-    if(IN_LIST == dis.device_in_list(1234, 5678)) {
-        if(dis.is_device_disabled(1234, 5678) == DISABLE) {
-            cout << "DISABLE";
-        }else {
-            cout << "ENABLE";
-        }
-    }*/
 
     libusb_hotplug_event hp_event = static_cast<libusb_hotplug_event> (LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT);
     int hp_vid = LIBUSB_HOTPLUG_MATCH_ANY;
@@ -89,7 +100,7 @@ int main(int argc, char *argv[])
        cout << "Resigter hotplug_callback successfully";
     }
 
-
+    test_qt_tree();
     while(1) {
         libusb_handle_events(context);
     }
