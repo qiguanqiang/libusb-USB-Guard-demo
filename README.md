@@ -1,2 +1,2 @@
 # USB-Guard
-A Qt Desktop Application to install/uninstall USB devices or disable/enable USB port, supporting Unix like/Windows platform
+A Qt Desktop Application using LISBUSB to install/uninstall USB devices or disable/enable USB port, supporting Unix like/Windows platform
