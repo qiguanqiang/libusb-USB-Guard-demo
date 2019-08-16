@@ -3,6 +3,7 @@
 #include "libs.h"
 #include "disabler.h"
 #include "QTreeWidget"
+#include "pthread.h"
 
 libusb_device **devs;
 libusb_context *context = NULL;
@@ -62,33 +63,36 @@ static int hotplug_callback(struct libusb_context *ctx,struct libusb_device *dev
      }
     return EXIT_SUCCESS;
 }
-
+void *listen_hotplug(void *args) {
+    while(1) {
+        libusb_handle_events(context);
+    }
+}
 
 int main(int argc, char *argv[])
 {
+    QApplication a(argc, argv);
+    //    MainWindow w;
+    //    w.show();
     int ret;
+    libusb_device *dev;
+
+    pthread_t listener;
+
 
     ret = libusb_init(&context);
     if (ret < 0) {
         cout << "failed to initialise libusb: " << libusb_error_name(ret) << endl;
         return EXIT_FAILURE;
     }
-
-    QApplication a(argc, argv);
-//    MainWindow w;
-//    w.show();
-
     get_device_list(devs,context);
     device_init(devs);
 
-    libusb_device *dev;
-
-
-    libusb_hotplug_event hp_event = static_cast<libusb_hotplug_event> (LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT);
-    int hp_vid = LIBUSB_HOTPLUG_MATCH_ANY;
-    int hp_pid = LIBUSB_HOTPLUG_MATCH_ANY;
-    int hp_dev_class = LIBUSB_HOTPLUG_MATCH_ANY;
-    libusb_hotplug_flag hp_flag = static_cast<libusb_hotplug_flag>(1);
+    libusb_hotplug_event hp_event   = static_cast<libusb_hotplug_event> (LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT);
+    int hp_vid                      = LIBUSB_HOTPLUG_MATCH_ANY;
+    int hp_pid                      = LIBUSB_HOTPLUG_MATCH_ANY;
+    int hp_dev_class                = LIBUSB_HOTPLUG_MATCH_ANY;
+    libusb_hotplug_flag hp_flag     = static_cast<libusb_hotplug_flag>(1);
     void *hp_user_data;
     libusb_hotplug_callback_handle cb_handle = NULL;
 
@@ -101,15 +105,25 @@ int main(int argc, char *argv[])
        cout << "Resigter hotplug_callback successfully";
     }
 
+    ret = pthread_create(&listener, NULL, listen_hotplug, NULL);
+    if(ret != 0) {
+        cout << "Creating pthread failed" << endl;
+    }
+
     test_qt_tree();
+
 //    while(1) {
 //        libusb_handle_events(context);
 //    }
+    //libusb_handle_events_timeout(context, 0);
+    a.exec();
 
     libusb_hotplug_deregister_callback(context, cb_handle);
     libusb_free_device_list(devs,1);
     libusb_exit(context);
-    return a.exec();
+
+    pthread_exit(NULL);
+    return 0;
 }
 
 int get_device_list(libusb_device **&devs, libusb_context *&context)
@@ -151,7 +165,7 @@ int get_device_list(libusb_device **&devs, libusb_context *&context)
 
     for (i = 0;i < list;i++) {
 
-        cout << " i" << " ";
+        cout << i << " ";
         //print_devices(devs[i]);
     }
 
