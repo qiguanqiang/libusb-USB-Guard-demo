@@ -10,7 +10,14 @@ libusb_context *context = NULL;
 
 void test_qt_tree() {
     QTreeWidget *treeWidget = new QTreeWidget();
-    treeWidget->setColumnCount(1);
+    treeWidget->setColumnCount(4);
+    QStringList labels;
+    labels.append("Device");
+    labels.append("Type");
+    labels.append("Vendor ID");
+    labels.append("Product ID");
+    treeWidget->setHeaderLabels(labels);
+    treeWidget->setGeometry(0, 0, 800, 600);
     treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
     QList<QTreeWidgetItem *> items;
 
