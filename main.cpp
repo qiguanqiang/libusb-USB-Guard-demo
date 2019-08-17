@@ -1,44 +1,24 @@
+/*EXTERNAL LIBRARIES*/
 #include "mainwindow.h"
 #include <QApplication>
-#include "libs.h"
-#include "disabler.h"
 #include "QTreeWidget"
 #include "pthread.h"
+
+/*INTERNAL LIBRARIES*/
+#include "libs.h"
+#include "disabler.h"
+
+#define CLMN_DEVICE 0
+#define CLMN_TYPE   1
+#define CLMN_VID    2
+#define CLMN_PID    3
 
 libusb_device **devs;
 libusb_context *context = NULL;
 
-void test_qt_tree() {
-    QTreeWidget *treeWidget = new QTreeWidget();
-    treeWidget->setColumnCount(4);
-    QStringList labels;
-    labels.append("Device");
-    labels.append("Type");
-    labels.append("Vendor ID");
-    labels.append("Product ID");
-    treeWidget->setHeaderLabels(labels);
-    treeWidget->setGeometry(0, 0, 800, 600);
-    treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
-    QList<QTreeWidgetItem *> items;
-
-    //treeWidget->insertTopLevelItems(0, items);
-    QTreeWidgetItem *item = new QTreeWidgetItem;
-    item->setText(0, "hello");
-    QTreeWidgetItem *c = new QTreeWidgetItem;
-    c->setText(0, "world");
-    item->addChild(c);
-    items.append(item);
-
-    QTreeWidgetItem *item2 = new QTreeWidgetItem;
-    item2->setText(0, "hello");
-    items.append(item2);
-
-
-    treeWidget->insertTopLevelItems(0, items);
-    treeWidget->expandAll();// must be placed behind 'insertTopLevel'
-    treeWidget->show();
-}
-
+void test_qt_tree(libusb_device **devs);
+void arange_tree(QTreeWidget *&treeWidget, libusb_device **devs);
+string get_dev_type(libusb_device *dev);
 void device_init(libusb_device **&devs);
 int uninstall_device(libusb_device *dev);
 int install_device(libusb_device *dev);
@@ -117,7 +97,7 @@ int main(int argc, char *argv[])
         cout << "Creating pthread failed" << endl;
     }
 
-    test_qt_tree();
+    test_qt_tree(devs);
 
 //    while(1) {
 //        libusb_handle_events(context);
@@ -411,8 +391,69 @@ void device_init(libusb_device **&devs) {
 
 }
 
+void test_qt_tree(libusb_device** devs) {
+    QTreeWidget *treeWidget = new QTreeWidget();
+    treeWidget->setColumnCount(4);
+    QStringList labels;
+    labels.append("Device");
+    labels.append("Type");
+    labels.append("Vendor ID");
+    labels.append("Product ID");
+    treeWidget->setHeaderLabels(labels);
+    treeWidget->setGeometry(0, 0, 1024, 768);
+    treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+
+//    QList<QTreeWidgetItem *> items;
+//    //treeWidget->insertTopLevelItems(0, items);
+//    QTreeWidgetItem *item = new QTreeWidgetItem;
+//    item->setText(0, "hello");
+//    QTreeWidgetItem *c = new QTreeWidgetItem;
+//    c->setText(0, "world");
+//    item->addChild(c);
+//    items.append(item);
+
+//    QTreeWidgetItem *item2 = new QTreeWidgetItem;
+//    item2->setText(0, "hello");
+//    items.append(item2);
 
 
+    arange_tree(treeWidget, devs);
+    treeWidget->expandAll();// must be placed behind 'insertTopLevel'
+    treeWidget->show();
+}
+
+void arange_tree(QTreeWidget *&treeWidget, libusb_device **devs) {
+    /* for device returning NULL parent pointer: be parent
+     * for device returning a non-NULL device, go get a parent
+     * for device did not find the parent in UI, go to stack and match later
+     */
+    int i;
+    int ret;
+    libusb_device *tmp_dev = NULL;
+    QList<QTreeWidgetItem *> items;
+    vector<libusb_device **> no_parent_list;
+
+    while(devs[i]) {
+        tmp_dev = libusb_get_parent(devs[i]);
+        if(tmp_dev == NULL) {
+            QTreeWidgetItem tmp_item;
+            int *vid_pid;
+            vid_pid = get_vid_pid(devs[i]);
+
+            tmp_item.setText(CLMN_DEVICE, to_string(devs[i]));
+            tmp_item.setText(CLMN_TYPE, get_dev_type(devs[i]));
+            tmp_item.setText(CLMN_VID, to_string(vid_pid[0]));
+            tmp_item.setText(CLMN_PID, to_string(vid_pid[1]);
+            items.append(tmp_item);
+            i++;
+        }
+    }
+    treeWidget->insertTopLevelItems(0, items);
+}
+
+string get_dev_type(libusb_device *dev) {
+    return "NOT_FOUND";
+}
 
 
 
