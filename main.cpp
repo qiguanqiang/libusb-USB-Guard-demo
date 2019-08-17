@@ -436,14 +436,17 @@ void arange_tree(QTreeWidget *&treeWidget, libusb_device **devs) {
     while(devs[i]) {
         tmp_dev = libusb_get_parent(devs[i]);
         if(tmp_dev == NULL) {
-            QTreeWidgetItem tmp_item;
+            QTreeWidgetItem *tmp_item;
             int *vid_pid;
             vid_pid = get_vid_pid(devs[i]);
 
-            tmp_item.setText(CLMN_DEVICE, to_string(devs[i]));
-            tmp_item.setText(CLMN_TYPE, get_dev_type(devs[i]));
-            tmp_item.setText(CLMN_VID, to_string(vid_pid[0]));
-            tmp_item.setText(CLMN_PID, to_string(vid_pid[1]);
+            QString qstr = QString::fromStdString(to_string(i));
+            tmp_item->setText(CLMN_DEVICE, qstr);
+            tmp_item->setText(CLMN_TYPE, "NOT_FOUND");
+            qstr = QString::fromStdString(to_string(vid_pid[0]));
+            tmp_item->setText(CLMN_VID, qstr);
+            qstr = QString::fromStdString(to_string(vid_pid[1]));
+            tmp_item->setText(CLMN_PID, qstr);
             items.append(tmp_item);
             i++;
         }
@@ -455,7 +458,20 @@ string get_dev_type(libusb_device *dev) {
     return "NOT_FOUND";
 }
 
+void click_item() {
+    QTreeWidgetItem* curItem=treeWidget->currentItem();  //**获取当前被点击的节点
+        if(curItem == NULL || curItem->parent() == NULL)
+            return;           //右键的位置在空白位置右击或者点击的是顶层item
 
+        //创建一个action
+        QAction deleteItem(QString::fromLocal8Bit("&删除"),this);
+        connect(&deleteItem, SIGNAL(triggered()), this, SLOT(deleteItem()));
+        QPoint pos;
+        //创建一个菜单栏
+        QMenu menu(treeWidget);
+        menu.addAction(&deleteItem);
+        menu.exec(QCursor::pos());  //在当前鼠标位置显示
+}
 
 
 
