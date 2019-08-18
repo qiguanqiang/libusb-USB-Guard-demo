@@ -3,6 +3,8 @@
 #include <QApplication>
 #include "QTreeWidget"
 #include "pthread.h"
+#include "sstream"
+#include <QDebug>
 
 /*INTERNAL LIBRARIES*/
 #include "libs.h"
@@ -356,11 +358,6 @@ libusb_device *get_device_by_vid_pid_2(libusb_device **devs, int vid, int pid, l
     return EXIT_SUCCESS;
 }*/
 
-
-void mute(libusb_device *dev) {
-
-}
-
 void device_init(libusb_device **&devs) {
     libusb_device_handle *handle;
     ssize_t i;
@@ -427,29 +424,42 @@ void arange_tree(QTreeWidget *&treeWidget, libusb_device **devs) {
      * for device returning a non-NULL device, go get a parent
      * for device did not find the parent in UI, go to stack and match later
      */
-    int i;
+    int i = 0;
     int ret;
-    libusb_device *tmp_dev = NULL;
+    libusb_device *tmp_dev;
     QList<QTreeWidgetItem *> items;
     vector<libusb_device **> no_parent_list;
+    stringstream sstream;
+    int *vid_pid;
+    string vid_str, pid_str;
 
     while(devs[i]) {
         tmp_dev = libusb_get_parent(devs[i]);
-        if(tmp_dev == NULL) {
-            QTreeWidgetItem *tmp_item;
-            int *vid_pid;
-            vid_pid = get_vid_pid(devs[i]);
 
-            QString qstr = QString::fromStdString(to_string(i));
-            tmp_item->setText(CLMN_DEVICE, qstr);
-            tmp_item->setText(CLMN_TYPE, "NOT_FOUND");
-            qstr = QString::fromStdString(to_string(vid_pid[0]));
-            tmp_item->setText(CLMN_VID, qstr);
-            qstr = QString::fromStdString(to_string(vid_pid[1]));
-            tmp_item->setText(CLMN_PID, qstr);
+
+        if(tmp_dev == NULL) {
+            QTreeWidgetItem *tmp_item = new QTreeWidgetItem;
+            vid_pid = get_vid_pid(devs[i]);
+            //qDebug() << vid_pid[0] << vid_pid[1];
+
+            int a = vid_pid[0];
+            int b = vid_pid[1];
+            sstream.flush();
+            sstream << a;
+            qDebug() << a;
+           // vid_str = sstream.str();
+            sstream.flush();
+            sstream << b;
+            qDebug() << b;
+            pid_str = sstream.str();
+
+            tmp_item->setText(CLMN_DEVICE,  QString::fromStdString(to_string(i)));
+            tmp_item->setText(CLMN_TYPE,    "NOT_FOUND");
+            tmp_item->setText(CLMN_VID,     QString::fromStdString(vid_str));
+            tmp_item->setText(CLMN_PID,     QString::fromStdString(pid_str));
             items.append(tmp_item);
-            i++;
         }
+        i++;
     }
     treeWidget->insertTopLevelItems(0, items);
 }
@@ -459,7 +469,7 @@ string get_dev_type(libusb_device *dev) {
 }
 
 void click_item() {
-    QTreeWidgetItem* curItem=treeWidget->currentItem();  //**获取当前被点击的节点
+    /*QTreeWidgetItem* curItem=treeWidget->currentItem();  //**获取当前被点击的节点
         if(curItem == NULL || curItem->parent() == NULL)
             return;           //右键的位置在空白位置右击或者点击的是顶层item
 
@@ -470,7 +480,7 @@ void click_item() {
         //创建一个菜单栏
         QMenu menu(treeWidget);
         menu.addAction(&deleteItem);
-        menu.exec(QCursor::pos());  //在当前鼠标位置显示
+        menu.exec(QCursor::pos());  //在当前鼠标位置显示*/
 }
 
 
