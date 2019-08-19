@@ -5,6 +5,7 @@
 #include "pthread.h"
 #include "sstream"
 #include <QDebug>
+#include "map"
 
 /*INTERNAL LIBRARIES*/
 #include "libs.h"
@@ -17,6 +18,7 @@
 
 libusb_device **devs;
 libusb_context *context = NULL;
+map<libusb_device*, QTreeWidgetItem*> dev_item_map;
 
 void test_qt_tree(libusb_device **devs);
 void arange_tree(QTreeWidget *&treeWidget, libusb_device **devs);
@@ -194,6 +196,7 @@ void print_devices(libusb_device *dev)
     }
     cout << "*********************************************************" << endl;
 }
+
 int *get_vid_pid(libusb_device *dev) {
     libusb_device_descriptor dev_desc;
     int ret;
@@ -431,35 +434,40 @@ void arange_tree(QTreeWidget *&treeWidget, libusb_device **devs) {
     vector<libusb_device **> no_parent_list;
     stringstream sstream;
     int *vid_pid;
-    string vid_str, pid_str;
 
     while(devs[i]) {
-        tmp_dev = libusb_get_parent(devs[i]);
+       // tmp_dev = libusb_get_parent(devs[i]);
+        QTreeWidgetItem *tmp_item = new QTreeWidgetItem;
+        vid_pid = get_vid_pid(devs[i]);
 
+        int this_vid = vid_pid[0];//必须复制，否则数组内值会因为未知原因变
+        int this_pid = vid_pid[1];
 
-        if(tmp_dev == NULL) {
-            QTreeWidgetItem *tmp_item = new QTreeWidgetItem;
-            vid_pid = get_vid_pid(devs[i]);
-            //qDebug() << vid_pid[0] << vid_pid[1];
+        tmp_item->setText(CLMN_DEVICE,  QString::fromStdString(to_string(i)));
+        tmp_item->setText(CLMN_TYPE,    "NOT_FOUND");
+        tmp_item->setText(CLMN_VID,     QString::fromStdString(to_string(this_vid)));
+        tmp_item->setText(CLMN_PID,     QString::fromStdString(to_string(this_pid)));
 
-            int a = vid_pid[0];
-            int b = vid_pid[1];
-            sstream.flush();
-            sstream << a;
-            qDebug() << a;
-           // vid_str = sstream.str();
-            sstream.flush();
-            sstream << b;
-            qDebug() << b;
-            pid_str = sstream.str();
-
-            tmp_item->setText(CLMN_DEVICE,  QString::fromStdString(to_string(i)));
-            tmp_item->setText(CLMN_TYPE,    "NOT_FOUND");
-            tmp_item->setText(CLMN_VID,     QString::fromStdString(vid_str));
-            tmp_item->setText(CLMN_PID,     QString::fromStdString(pid_str));
+        if(libusb_get_parent(devs[i]) == NULL) {
             items.append(tmp_item);
         }
+        dev_item_map[devs[i]] = tmp_item;
         i++;
+    }
+    for(auto iter = dev_item_map.begin(); iter != dev_item_map.end(); iter++) {
+        libusb_device *this_parent;
+        this_parent = libusb_get_parent(iter->first);
+
+        if(this_parent != NULL) {
+            auto iter_parent = dev_item_map.begin();
+            while(iter_parent != dev_item_map.end()) {
+                if(iter_parent->first == this_parent) {
+                    iter_parent->second->addChild(iter->second);
+                }
+                iter_parent++;
+            }
+        }
+
     }
     treeWidget->insertTopLevelItems(0, items);
 }
