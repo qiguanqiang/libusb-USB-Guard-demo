@@ -1,6 +1,6 @@
 #include "iostream"
 #include "libusb.h"
-
+#include "map"
 //function sleep()
 #include "unistd.h"
 
@@ -10,3 +10,4 @@ using namespace std;
 #define LIBS_H
 
 #endif // LIBS_H
+

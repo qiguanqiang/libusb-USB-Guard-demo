@@ -5,7 +5,6 @@
 #include "pthread.h"
 #include "sstream"
 #include <QDebug>
-#include "map"
 
 /*INTERNAL LIBRARIES*/
 #include "libs.h"
@@ -22,7 +21,7 @@ map<libusb_device*, QTreeWidgetItem*> dev_item_map;
 
 void test_qt_tree(libusb_device **devs);
 void arange_tree(QTreeWidget *&treeWidget, libusb_device **devs);
-string get_dev_type(libusb_device *dev);
+QString get_device_type(libusb_device *dev);
 void device_init(libusb_device **&devs);
 int uninstall_device(libusb_device *dev);
 int install_device(libusb_device *dev);
@@ -442,7 +441,8 @@ void arange_tree(QTreeWidget *&treeWidget, libusb_device **devs) {
 
         int this_vid = vid_pid[0];//必须复制，否则数组内值会因为未知原因变
         int this_pid = vid_pid[1];
-
+        //QString str = get_device_type(devs[i]);
+        //qDebug() << str;
         tmp_item->setText(CLMN_DEVICE,  QString::fromStdString(to_string(i)));
         tmp_item->setText(CLMN_TYPE,    "NOT_FOUND");
         tmp_item->setText(CLMN_VID,     QString::fromStdString(to_string(this_vid)));
@@ -451,6 +451,7 @@ void arange_tree(QTreeWidget *&treeWidget, libusb_device **devs) {
         if(libusb_get_parent(devs[i]) == NULL) {
             items.append(tmp_item);
         }
+        /*build device-item map*/
         dev_item_map[devs[i]] = tmp_item;
         i++;
     }
@@ -490,12 +491,127 @@ void click_item() {
         menu.addAction(&deleteItem);
         menu.exec(QCursor::pos());  //在当前鼠标位置显示*/
 }
+QString get_device_type(libusb_device* dev) {
+    libusb_device_descriptor *dev_desc;
+    libusb_config_descriptor *config_desc;
+    const libusb_interface *interface;
+    //const libusb_interface_descriptor *interface_desc;
+    //const libusb_endpoint_descriptor *endpoint_desc;
+    //libusb_device_handle *handle = NULL;
+    int ret;
+    int dev_class, if_class;
+    QString type;
 
+    ret = libusb_get_device_descriptor(dev, dev_desc);
+    if (ret < 0) {
+        qDebug() << "error in detting device descriptor" << libusb_error_name(ret) << endl;
+        return "get_device_desc failed";
+    }
+    dev_class = dev_desc->bDeviceClass;
 
+    ret = libusb_get_config_descriptor(dev, 0, &config_desc);
+//    interface = &config_desc->interface[0];
+//    if_class = interface->altsetting[0].bInterfaceClass;
+    if_class = 1;
 
+    switch (dev_class) {
+        case 0:
+            switch(if_class){
+                case 1:
+                    type = "Audio音频设备";
+                    break;
+                case 3:
+                    type = "HID(Human Interface Device)人机接口设备";
+                    break;
+                case 5:
+                    type = "Physical物理设备";
+                    break;
+                case 6:
+                    type = "Image图像设备";
+                    break;
+                case 7:
+                    type = "Printer打印机";
+                    break;
+                case 8:
+                    type = "Mass Storage 大容量存储";
+                    break;
+                case 10:
+                    type = "CDC-Data通信设备";
+                    break;
+                case 11:
+                    type = "Smart Card智能卡";
+                    break;
+                case 13:
+                    type = "Content Security内容安全设备";
+                    break;
+                case 14:
+                    type = "Video视频设备";
+                    break;
+                case 15:
+                    type = "Personal Healthcare个人健康设备";
+                    break;
+                case 16:
+                    type = "Audio/Video Devices声音/视频设备";
+                    break;
+                case 18:
+                    type = "USB Type-C Bridge Class";
+                    break;
+                case 224:
+                    type = "Wireless Controller无限控制器";
+                    break;
+                case 254:
+                    type = "Application Specific特定应用设备";
+                    break;
+                default:
+                    type = "Unrecognized Interface";
+            }
+                break;
+        case 2:
+            if(if_class == 2){
+                type = "Communications&CDC通信设备";
+            }else {
+                type = "可能是Communications&CDC通信设备";
+            }
+            break;
+        case 9:
+            type = "Hub集线器";
+            break;
+        case 17:
+            type = "Billboard Device Class广播牌设备";
+            break;
+        case 220:
+            if(if_class == 220){
+                type = "Diagnostic Device";
+            }else {
+                type = "可能是Diagnostic Device";
+            }
+            break;
+        case 239:
+            if(if_class == 239){
+                type = "Miscellaneous";
+            }else {
+                type = "可能是Miscellaneous";
+            }
+            break;
+        case 255:
+            if(if_class == 255){
+                type = "Vendor Specific厂商自定义设备";
+            }else {
+                type = "可能是Vendor Specific厂商自定义设备";
+            }
+            break;
+        default:
+            type = "Unrecognized Device";
+    }
+    return type;
+}
 
-
-
+int hotplug_flush_UI(string op, libusb_device *dev, QList<QTreeWidgetItem *> items) {
+    QTreeWidgetItem item = dev_item_map[dev];
+    if(op == "remove") {
+        items.removeOne(item);
+    }
+}
 
 
 
