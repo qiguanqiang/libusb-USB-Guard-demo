@@ -17,11 +17,14 @@
 
 libusb_device **devs;
 libusb_context *context = NULL;
+QList<QTreeWidgetItem *> items;
 map<libusb_device*, QTreeWidgetItem*> dev_item_map;
 
 void test_qt_tree(libusb_device **devs);
 void arange_tree(QTreeWidget *&treeWidget, libusb_device **devs);
 QString get_device_type(libusb_device *dev);
+int hotplug_flush_UI(string op, libusb_device *dev);
+
 void device_init(libusb_device **&devs);
 int uninstall_device(libusb_device *dev);
 int install_device(libusb_device *dev);
@@ -34,25 +37,7 @@ libusb_device *get_device_by_vid_pid_2(libusb_device **devs, int vid, int pid, l
 //    libusb_hotplug_event event, void *user_data);
 
 static int hotplug_callback(struct libusb_context *ctx,struct libusb_device *device,
-                            libusb_hotplug_event event, void *user_data) {
-    if(event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
-        int *vid_pid;
-        int ret;
-
-        vid_pid = get_vid_pid(device);
-        disabler dis;
-        if(dis.is_device_disabled(vid_pid[0], vid_pid[1]) == DISABLED) {
-            ret = uninstall_device(device);
-            if(ret < 0) {
-                return -1;
-            }
-        }
-     }else if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
-        libusb_free_device_list(devs, 1);
-        get_device_list(devs, context);
-     }
-    return EXIT_SUCCESS;
-}
+                            libusb_hotplug_event event, void *user_data);
 void *listen_hotplug(void *args) {
     while(1) {
         libusb_handle_events(context);
@@ -82,7 +67,7 @@ int main(int argc, char *argv[])
     int hp_vid                      = LIBUSB_HOTPLUG_MATCH_ANY;
     int hp_pid                      = LIBUSB_HOTPLUG_MATCH_ANY;
     int hp_dev_class                = LIBUSB_HOTPLUG_MATCH_ANY;
-    libusb_hotplug_flag hp_flag     = static_cast<libusb_hotplug_flag>(1);
+    libusb_hotplug_flag hp_flag     = static_cast<libusb_hotplug_flag>(0);
     void *hp_user_data;
     libusb_hotplug_callback_handle cb_handle = NULL;
 
@@ -304,62 +289,6 @@ libusb_device *get_device_by_vid_pid_2(libusb_device **devs, int vid, int pid, l
     }
 }
 
-//static int hotplug_callback(struct libusb_context *ctx, struct libusb_device *device,
-//    libusb_hotplug_event event, void *user_data) {
-//    //uint8_t deviceAddress = libusb_get_device_address(device);
-
-//    if(event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
-//        int *vid_pid;
-//        int ret;
-
-//        libusb_free_device_list(devs, 1);
-//        get_device_list(devs, ctx);
-
-//        vid_pid = get_vid_pid(device);
-//        disabler dis;
-//        if(dis.is_device_disabled(vid_pid[0], vid_pid[1]) == DISABLED) {
-//           ret = uninstall_device(device);
-//           if(ret < 0) {
-//               return -1;
-//           }
-//         }
-//    } else if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
-//        libusb_free_device_list(devs, 1);
-//        get_device_list(devs, ctx);
-//    }
-////    int i=1;
-////    i++;
-
-//}
-
-/*static int LIBUSB_CALL hotplug_callback(
-    libusb_context *context, libusb_device *dev,
-    libusb_hotplug_event event, void *user_data) {
-    int ret;
-    //enum libusb_hotplug_event {
-    //     LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED = 0x01,
-    //     LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT = 0x02 }
-    if(event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
-        int *vid_pid;
-
-        libusb_free_device_list(devs, 1);
-        get_device_list(devs, context);
-
-        vid_pid = get_vid_pid(dev);
-        disabler dis;
-        if(dis.is_device_disabled(vid_pid[0], vid_pid[1]) == DISABLED) {
-           ret = uninstall_device(dev);
-           if(ret < 0) {
-               return -1;
-           }
-         }
-     }else if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
-        libusb_free_device_list(devs, 1);
-        get_device_list(devs, context);
-     }
-    return EXIT_SUCCESS;
-}*/
-
 void device_init(libusb_device **&devs) {
     libusb_device_handle *handle;
     ssize_t i;
@@ -388,6 +317,29 @@ void device_init(libusb_device **&devs) {
         i++;
     }
 
+}
+
+static int hotplug_callback(struct libusb_context *ctx,struct libusb_device *device,
+                            libusb_hotplug_event event, void *user_data) {
+    if(event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
+        int *vid_pid;
+        int ret;
+
+        vid_pid = get_vid_pid(device);
+        disabler dis;
+        if(dis.is_device_disabled(vid_pid[0], vid_pid[1]) == DISABLED) {
+            ret = uninstall_device(device);
+            if(ret < 0) {
+                return -1;
+            }
+        }
+        //qDebug() << "123";
+        hotplug_flush_UI("insert", device);
+     }else if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
+        libusb_free_device_list(devs, 1);
+        get_device_list(devs, context);
+     }
+    return EXIT_SUCCESS;
 }
 
 void test_qt_tree(libusb_device** devs) {
@@ -427,11 +379,6 @@ void arange_tree(QTreeWidget *&treeWidget, libusb_device **devs) {
      * for device did not find the parent in UI, go to stack and match later
      */
     int i = 0;
-    int ret;
-    libusb_device *tmp_dev;
-    QList<QTreeWidgetItem *> items;
-    vector<libusb_device **> no_parent_list;
-    stringstream sstream;
     int *vid_pid;
 
     while(devs[i]) {
@@ -441,10 +388,10 @@ void arange_tree(QTreeWidget *&treeWidget, libusb_device **devs) {
 
         int this_vid = vid_pid[0];//必须复制，否则数组内值会因为未知原因变
         int this_pid = vid_pid[1];
-        //QString str = get_device_type(devs[i]);
-        //qDebug() << str;
+//        QString str = get_device_type(devs[i]);
+//        qDebug() << str;
         tmp_item->setText(CLMN_DEVICE,  QString::fromStdString(to_string(i)));
-        tmp_item->setText(CLMN_TYPE,    "NOT_FOUND");
+        tmp_item->setText(CLMN_TYPE,    "Unresolved");
         tmp_item->setText(CLMN_VID,     QString::fromStdString(to_string(this_vid)));
         tmp_item->setText(CLMN_PID,     QString::fromStdString(to_string(this_pid)));
 
@@ -473,9 +420,6 @@ void arange_tree(QTreeWidget *&treeWidget, libusb_device **devs) {
     treeWidget->insertTopLevelItems(0, items);
 }
 
-string get_dev_type(libusb_device *dev) {
-    return "NOT_FOUND";
-}
 
 void click_item() {
     /*QTreeWidgetItem* curItem=treeWidget->currentItem();  //**获取当前被点击的节点
@@ -518,99 +462,127 @@ QString get_device_type(libusb_device* dev) {
         case 0:
             switch(if_class){
                 case 1:
-                    type = "Audio音频设备";
+                    return "Audio音频设备";
                     break;
                 case 3:
-                    type = "HID(Human Interface Device)人机接口设备";
+                    return "HID(Human Interface Device)人机接口设备";
                     break;
                 case 5:
-                    type = "Physical物理设备";
+                    return "Physical物理设备";
                     break;
                 case 6:
-                    type = "Image图像设备";
+                    return "Image图像设备";
                     break;
                 case 7:
-                    type = "Printer打印机";
+                    return "Printer打印机";
                     break;
                 case 8:
-                    type = "Mass Storage 大容量存储";
+                    return "Mass Storage 大容量存储";
                     break;
                 case 10:
-                    type = "CDC-Data通信设备";
+                    return "CDC-Data通信设备";
                     break;
                 case 11:
-                    type = "Smart Card智能卡";
+                    return "Smart Card智能卡";
                     break;
                 case 13:
-                    type = "Content Security内容安全设备";
+                    return "Content Security内容安全设备";
                     break;
                 case 14:
-                    type = "Video视频设备";
+                    return "Video视频设备";
                     break;
                 case 15:
-                    type = "Personal Healthcare个人健康设备";
+                    return "Personal Healthcare个人健康设备";
                     break;
                 case 16:
-                    type = "Audio/Video Devices声音/视频设备";
+                    return "Audio/Video Devices声音/视频设备";
                     break;
                 case 18:
-                    type = "USB Type-C Bridge Class";
+                    return "USB Type-C Bridge Class";
                     break;
                 case 224:
-                    type = "Wireless Controller无限控制器";
+                    return "Wireless Controller无限控制器";
                     break;
                 case 254:
-                    type = "Application Specific特定应用设备";
+                    return "Application Specific特定应用设备";
                     break;
                 default:
-                    type = "Unrecognized Interface";
+                    return "Unrecognized Interface";
             }
                 break;
         case 2:
             if(if_class == 2){
-                type = "Communications&CDC通信设备";
+                return "Communications&CDC通信设备";
             }else {
-                type = "可能是Communications&CDC通信设备";
+                return "可能是Communications&CDC通信设备";
             }
             break;
         case 9:
-            type = "Hub集线器";
+            return "Hub集线器";
             break;
         case 17:
-            type = "Billboard Device Class广播牌设备";
+            return "Billboard Device Class广播牌设备";
             break;
         case 220:
             if(if_class == 220){
-                type = "Diagnostic Device";
+                return "Diagnostic Device";
             }else {
-                type = "可能是Diagnostic Device";
+                return "可能是Diagnostic Device";
             }
             break;
         case 239:
             if(if_class == 239){
-                type = "Miscellaneous";
+                return "Miscellaneous";
             }else {
-                type = "可能是Miscellaneous";
+                return "可能是Miscellaneous";
             }
             break;
         case 255:
             if(if_class == 255){
-                type = "Vendor Specific厂商自定义设备";
+                return "Vendor Specific厂商自定义设备";
             }else {
-                type = "可能是Vendor Specific厂商自定义设备";
+                return "可能是Vendor Specific厂商自定义设备";
             }
             break;
         default:
-            type = "Unrecognized Device";
+            return "Unrecognized Device";
     }
-    return type;
+    return "type";
 }
 
-int hotplug_flush_UI(string op, libusb_device *dev, QList<QTreeWidgetItem *> items) {
-    QTreeWidgetItem item = dev_item_map[dev];
+int hotplug_flush_UI(string op, libusb_device *dev) {
+    QTreeWidgetItem* item = dev_item_map[dev];
+    int *vid_pid;
+    map<libusb_device*, QTreeWidgetItem*>::iterator parent_iter;
+
     if(op == "remove") {
         items.removeOne(item);
+        dev_item_map.erase(dev);
+        return EXIT_SUCCESS;
+    }else if(op == "insert") {
+        vid_pid = get_vid_pid(dev);
+        int devs_count = 2;
+        int this_vid = vid_pid[0];//必须复制，否则数组内值会因为未知原因变
+        int this_pid = vid_pid[1];
+        qDebug() << this_vid << this_pid;
+        QString str = "new";
+        qDebug() << str;
+        while(devs[devs_count]) {
+            devs_count++;
+        }
+
+        item->setText(CLMN_DEVICE,  QString::fromStdString(to_string(devs_count)));
+        item->setText(CLMN_TYPE,    "Unresolved");
+        item->setText(CLMN_VID,     QString::fromStdString(to_string(this_vid)));
+        item->setText(CLMN_PID,     QString::fromStdString(to_string(this_pid)));
+        dev_item_map[dev] = item;
+
+        parent_iter = dev_item_map.find(libusb_get_parent(dev));
+        parent_iter->second->insertChild(0,item);
+        qDebug() << "insert successfully";
+        return EXIT_SUCCESS;
     }
+    return EXIT_FAILURE;
 }
 
 
