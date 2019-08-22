@@ -24,11 +24,12 @@ libusb_context *context = NULL;
 QList<QTreeWidgetItem *> items;
 map<libusb_device*, QTreeWidgetItem*> dev_item_map;
 
-void test_qt_tree(libusb_device **devs);
+void test_qt_tree(libusb_device **devs, QTreeWidget *treeWidget);
 void arange_tree(QTreeWidget *&treeWidget, libusb_device **devs);
 QString get_device_type(libusb_device *dev);
 int hotplug_flush_UI(string op, libusb_device *dev);
 void click_item(QTreeWidget* treeWidget);
+void pop_menu(QPoint p, QTreeWidget* treeWidget);
 
 void device_init(libusb_device **&devs);
 int uninstall_device(libusb_device *dev);
@@ -54,6 +55,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     //    MainWindow w;
     //    w.show();
+    QTreeWidget *treeWidget = new QTreeWidget();
     int ret;
     libusb_device *dev;
 
@@ -90,8 +92,11 @@ int main(int argc, char *argv[])
         cout << "Creating pthread failed" << endl;
     }
 
-    test_qt_tree(devs);
-
+    test_qt_tree(devs, treeWidget);
+    treeWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+    QObject::connect(treeWidget, SIGNAL(customContextMenuRequested(QPoint)), NULL, SLOT(pop_menu(QPoint, treeWidget)));
+    
+    //connect(disable_item, SIGNAL(triggered(bool)), this_item, SLOT(NULL));
 
 //    while(1) {
 //        libusb_handle_events(context);
@@ -297,7 +302,7 @@ libusb_device *get_device_by_vid_pid_2(libusb_device **devs, int vid, int pid, l
 
 void device_init(libusb_device **&devs) {
     libusb_device_handle *handle;
-    ssize_t i;
+    ssize_t i = 0;
     int ret;
 
     while(devs[i]){
@@ -348,8 +353,8 @@ static int hotplug_callback(struct libusb_context *ctx,struct libusb_device *dev
     return EXIT_SUCCESS;
 }
 
-void test_qt_tree(libusb_device** devs) {
-    QTreeWidget *treeWidget = new QTreeWidget();
+void test_qt_tree(libusb_device** devs, QTreeWidget *treeWidget) {
+
     treeWidget->setColumnCount(4);
     QStringList labels;
     labels.append("Device");
@@ -424,7 +429,7 @@ void arange_tree(QTreeWidget *&treeWidget, libusb_device **devs) {
 
     }
     treeWidget->insertTopLevelItems(0, items);
-    click_item(treeWidget);
+    //click_item(treeWidget);
 }
 
 
@@ -468,7 +473,7 @@ void click_item(QTreeWidget* treeWidget) {
             QAction uninstall_item(QString::fromLocal8Bit("卸载"), treeWidget);
             QAction disable_item(QString::fromLocal8Bit("禁用"), treeWidget);
             QMenu *menu = new QMenu(treeWidget);
-            QObject::connect(disable_item, SIGNAL(triggered(bool)), this_item, SLOT(NULL));
+            //connect(disable_item, SIGNAL(triggered(bool)), this_item, SLOT(NULL));
 
             menu->addAction(&uninstall_item);
             menu->addAction(&disable_item);
@@ -496,7 +501,7 @@ int hotplug_flush_UI(string op, libusb_device *dev) {
     }else if(op == "insert") {
         vid_pid = get_vid_pid(dev);
         int devs_count = 2;
-        int this_vid = vid_pid[0];//必须复制，否则数组内值会因为未知原因变
+        int this_vid = vid_pid[0];//必须复制，否则数组内值会因为未知原因溢出
         int this_pid = vid_pid[1];
         qDebug() << this_vid << this_pid;
         QString str = "new";
@@ -519,6 +524,11 @@ int hotplug_flush_UI(string op, libusb_device *dev) {
     return EXIT_FAILURE;
 }
 
+void pop_menu(QPoint p, QTreeWidget* treeWidget) {
+    QMenu *menu = new QMenu("test", treeWidget);
+    menu->move(123,123);
+    menu->show();
+}
 
 
 QString get_device_type(libusb_device* dev) {
