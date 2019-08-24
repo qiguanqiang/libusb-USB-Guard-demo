@@ -1,3 +1,3 @@
 #!/bin/bash
-cp ../../qt/untitled/* .
+cp ../../qt/823/* .
 

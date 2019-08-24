@@ -14,13 +14,15 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    disabler.cpp
+    disabler.cpp \
+    main_functions.cpp
 
 HEADERS  += mainwindow.h \
     libs.h \
-    disabler.h
+    disabler.h \
+    main_functions.h
 
-FORMS    += mainwindow.ui
+FORMS    +=
 
 unix: LIBS += -lusb-1.0
 

@@ -1,6 +1,10 @@
+#ifndef DISABLER_H
+#define DISABLER_H
+
 #include "libs.h"
 #include "vector"
 #include "fstream"
+//#include "mainwindow.h"
 
 #define DISABLE_LIST_FILE_PATH "disable_list"
 
@@ -24,10 +28,8 @@ struct dev_dis_info {
     //1,if disabled; 0, if enabled;
 };
 
-#ifndef DISABLER_H
-#define DISABLER_H
 
-#endif // DISABLER_H
+
 
 class disabler {
 private:
@@ -39,3 +41,5 @@ public:
     int enable_record(int vid, int pid);
 };
 
+
+#endif // DISABLER_H

@@ -1,4 +1,5 @@
 #include "disabler.h"
+
 int disabler::device_in_list(int vid, int pid) {
 
 }
@@ -79,4 +80,5 @@ int disabler::enable_record(int vid, int pid) {
         }
     }
 }
+
 
