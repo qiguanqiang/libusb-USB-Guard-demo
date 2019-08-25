@@ -27,11 +27,11 @@ private slots:
 
 private:
     map<libusb_device *, QTreeWidgetItem *> dev_item_map;
-    libusb_device **devs;
 
 public:
+    libusb_device **devs;
     QTreeWidget* treeWidget = new QTreeWidget(this);
-    QList<QTreeWidgetItem*> items;
+    QList<QTreeWidgetItem*> *items = new QList<QTreeWidgetItem*>;
 
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();

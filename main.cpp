@@ -13,27 +13,75 @@
 libusb_device **devs;
 libusb_context *context = NULL;
 map<libusb_device*, QTreeWidgetItem*> dev_item_map;
-MainWindow *w_main;
+QList<QTreeWidgetItem*> *items = new QList<QTreeWidgetItem*>;
+QTreeWidget* treeWidget;
 
-QString get_device_type(libusb_device *dev);
-void pop_menu(QPoint p, QTreeWidget* treeWidget);
 
 static int hotplug_callback(struct libusb_context *ctx,struct libusb_device *device,
                             libusb_hotplug_event event, void *user_data);
-
+void *listen_hotplug(void *args);
 MainWindow *get_mainwindow(MainWindow *w){
     return w;
+}
+int hotplug_flush_UI(string op, libusb_device *dev) {
+
+    if(op == "remove") {
+        QTreeWidgetItem* item = dev_item_map[dev];
+        items->removeOne(item);
+        dev_item_map.erase(dev);
+        return EXIT_SUCCESS;
+    }else if(op == "insert") {
+        int *vid_pid;
+        vid_pid = get_vid_pid(dev);
+
+        int devs_count = 2;
+        int this_vid = vid_pid[0];//必须复制，否则数组内值会因为未知原因溢出
+        int this_pid = vid_pid[1];
+
+        QTreeWidgetItem* item = new QTreeWidgetItem;
+        map<libusb_device*, QTreeWidgetItem*>::iterator parent_iter;
+
+
+        qDebug() << this_vid << this_pid;
+        QString str = "new";
+        qDebug() << str;
+
+        while(devs[devs_count]) {
+            devs_count++;
+        }
+
+        item->setText(CLMN_DEVICE,  "new");
+        item->setText(CLMN_TYPE,    "Unresolved");
+        item->setText(CLMN_VID,     QString::fromStdString(to_string(this_vid)));
+        item->setText(CLMN_PID,     QString::fromStdString(to_string(this_pid)));
+        qDebug() << items->size();
+        dev_item_map[dev] = item;
+        for(auto iter = dev_item_map.begin(); iter != dev_item_map.end(); iter++) {
+            if(iter->first == libusb_get_parent(dev)) {
+
+                iter->second->addChild(item);
+                qDebug() << "insert successfully";
+            }
+        }
+        treeWidget->clear();
+        treeWidget->insertTopLevelItems(0, *items);
+        treeWidget->show();
+
+//        parent_iter = dev_item_map.find(libusb_get_parent(dev));
+//        parent_iter->second->addChild(item);
+        qDebug() << items->size();
+        return EXIT_SUCCESS;
+    }
+    return EXIT_FAILURE;
 }
 
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  MAIN FUNCTION  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    MainWindow *w;
-    w_main = w;
+    MainWindow *w = new MainWindow;
 
     int ret;
-    libusb_device *dev;
 
     pthread_t listener;
 
@@ -50,7 +98,7 @@ int main(int argc, char *argv[])
     int hp_vid                      = LIBUSB_HOTPLUG_MATCH_ANY;
     int hp_pid                      = LIBUSB_HOTPLUG_MATCH_ANY;
     int hp_dev_class                = LIBUSB_HOTPLUG_MATCH_ANY;
-    libusb_hotplug_flag hp_flag     = static_cast<libusb_hotplug_flag>(1);
+    libusb_hotplug_flag hp_flag     = static_cast<libusb_hotplug_flag>(0);
     void *hp_user_data;
     libusb_hotplug_callback_handle cb_handle = NULL;
 
@@ -62,8 +110,8 @@ int main(int argc, char *argv[])
     } else {
        cout << "Resigter hotplug_callback successfully";
     }
-    void *ar;
-    ret = pthread_create(&listener, NULL, listen_hotplug(ar, context), NULL);
+
+    ret = pthread_create(&listener, NULL, listen_hotplug, NULL);
     if(ret != 0) {
         cout << "Creating pthread failed" << endl;
     }
@@ -72,7 +120,8 @@ int main(int argc, char *argv[])
     w->set_maps(dev_item_map);
     w->build_up_tree(devs);
     w->register_sig_slot();
-
+    items = w->items;
+    treeWidget = w->treeWidget;
     w->show();
     a.exec();
 
@@ -87,7 +136,6 @@ int main(int argc, char *argv[])
 
 static int hotplug_callback(struct libusb_context *ctx,struct libusb_device *device,
                             libusb_hotplug_event event, void *user_data) {
-    MainWindow *w = get_mainwindow(w_main);
     if(event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
         int *vid_pid;
         int ret;
@@ -101,12 +149,18 @@ static int hotplug_callback(struct libusb_context *ctx,struct libusb_device *dev
             }
         }
 
-        w->hotplug_flush_UI("insert", device);
+        hotplug_flush_UI("insert", device);
      }else if (event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
         libusb_free_device_list(devs, 1);
         get_device_list(devs, context);
-        w->hotplug_flush_UI("remove", device);
+        hotplug_flush_UI("remove", device);
      }
     return EXIT_SUCCESS;
 }
 
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  FUNCTION of MAIN  @@@@@@@@@@@@@@@@@@@@@@@
+void *listen_hotplug(void *args) {
+    while(1) {
+        libusb_handle_events(context);
+    }
+}

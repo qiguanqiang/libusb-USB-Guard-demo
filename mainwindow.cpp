@@ -4,7 +4,6 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    this->setGeometry(0, 0, 1024, 768);
 }
 
 MainWindow::~MainWindow()
@@ -22,6 +21,7 @@ void MainWindow::set_maps(map<libusb_device *, QTreeWidgetItem *> dev_item_map) 
 
 void MainWindow::build_up_tree(libusb_device** devs) {
 
+    this->setGeometry(0, 0, 1024, 768);
     treeWidget->setColumnCount(4);
     QStringList labels;
     labels.append("Device");
@@ -60,7 +60,7 @@ void MainWindow::arange_tree(libusb_device **devs) {
         tmp_item->setText(CLMN_PID,     QString::fromStdString(to_string(this_pid)));
 
         if(libusb_get_parent(devs[i]) == NULL) {
-            items.append(tmp_item);
+            items->append(tmp_item);
         }
         /*build device-item map*/
         dev_item_map[devs[i]] = tmp_item;
@@ -81,7 +81,7 @@ void MainWindow::arange_tree(libusb_device **devs) {
         }
 
     }
-    treeWidget->insertTopLevelItems(0, items);
+    treeWidget->insertTopLevelItems(0, *items);
     //click_item(treeWidget);
 }
 
@@ -133,43 +133,6 @@ void MainWindow::click_item() {
         }
     }
 
-}
-
-int MainWindow::hotplug_flush_UI(string op, libusb_device *dev) {
-    QTreeWidgetItem* item = dev_item_map[dev];
-    int *vid_pid;
-    map<libusb_device*, QTreeWidgetItem*>::iterator parent_iter;
-
-    if(op == "remove") {
-        items.removeOne(item);
-        dev_item_map.erase(dev);
-        return EXIT_SUCCESS;
-    }else if(op == "insert") {
-        vid_pid = get_vid_pid(dev);
-        int devs_count = 2;
-        int this_vid = vid_pid[0];//必须复制，否则数组内值会因为未知原因溢出
-        int this_pid = vid_pid[1];
-
-        qDebug() << this_vid << this_pid;
-        QString str = "new";
-        qDebug() << str;
-
-        while(devs[devs_count]) {
-            devs_count++;
-        }
-
-        item->setText(CLMN_DEVICE,  QString::fromStdString(to_string(devs_count)));
-        item->setText(CLMN_TYPE,    "Unresolved");
-        item->setText(CLMN_VID,     QString::fromStdString(to_string(this_vid)));
-        item->setText(CLMN_PID,     QString::fromStdString(to_string(this_pid)));
-        dev_item_map[dev] = item;
-
-        parent_iter = dev_item_map.find(libusb_get_parent(dev));
-        parent_iter->second->insertChild(0,item);
-        qDebug() << "insert successfully";
-        return EXIT_SUCCESS;
-    }
-    return EXIT_FAILURE;
 }
 
 void MainWindow::register_sig_slot() {

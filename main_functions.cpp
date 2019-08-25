@@ -221,6 +221,50 @@ int get_device_list(libusb_device **&devs, libusb_context *&context)
 
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 QString get_device_type(libusb_device* dev) {
     libusb_device_descriptor *dev_desc;
     libusb_config_descriptor *config_desc;
@@ -336,8 +380,4 @@ QString get_device_type(libusb_device* dev) {
     return "type";
 }
 
-void *listen_hotplug(void *args, libusb_context* context) {
-    while(1) {
-        libusb_handle_events(context);
-    }
-}
+
