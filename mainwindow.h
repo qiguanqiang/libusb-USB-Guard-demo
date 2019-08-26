@@ -26,12 +26,13 @@ private slots:
     void right_click_slot(QPoint);
 
 private:
-    map<libusb_device *, QTreeWidgetItem *> dev_item_map;
+
 
 public:
     libusb_device **devs;
     QTreeWidget* treeWidget = new QTreeWidget(this);
     QList<QTreeWidgetItem*> *items = new QList<QTreeWidgetItem*>;
+    map<libusb_device*, QTreeWidgetItem*> dev_item_map;
 
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
@@ -41,7 +42,7 @@ public:
     //init and set values
     void init_tree();
     void set_devices(libusb_device **devs);
-    void set_maps(map<libusb_device *, QTreeWidgetItem *> &dev_item_map);
+    void set_maps(map<libusb_device*, QTreeWidgetItem*> &dev_item_map);
 
     //functional
     void build_up_tree(libusb_device **devs);

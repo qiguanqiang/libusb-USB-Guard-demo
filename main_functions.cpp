@@ -15,27 +15,27 @@ void print_devices(libusb_device *dev)
 
     ret = libusb_get_device_descriptor(dev, &dev_desc);
     if (ret < 0) {
-        cout << "error in detting device descriptor" << libusb_error_name(ret) << endl;
+        qDebug() << "error in detting device descriptor" << libusb_error_name(ret) << endl;
         return;
     }
 
-    cout << "Number of POS configs is " << dev_desc.bNumConfigurations << endl;
-    cout << "Device Vendor id): " << dev_desc.idVendor << endl;
-    cout << "Product ID: " << dev_desc.idProduct << endl;
-    cout << "Class ID: " << dev_desc.bDeviceClass << endl;
+    qDebug() << "Number of POS configs is " << dev_desc.bNumConfigurations << endl;
+    qDebug() << "Device Vendor id): "       << dev_desc.idVendor << endl;
+    qDebug() << "Product ID: "              << dev_desc.idProduct << endl;
+    qDebug() << "Class ID: "                << dev_desc.bDeviceClass << endl;
 
     ret = libusb_get_config_descriptor(dev, 0, &config_desc);
     if (ret == LIBUSB_ERROR_NOT_FOUND) {
         /*0 on success
         LIBUSB_ERROR_NOT_FOUND if the configuration does not exist
         another LIBUSB_ERROR code on error*/
-        cout << "The configuration does not exist" << endl;
+        qDebug() << "The configuration does not exist" << endl;
     }else if(ret < 0){
-        cout << "Error Code in libusb_get_config_descriptor: " << libusb_error_name(ret);
+        qDebug() << "Error Code in libusb_get_config_descriptor: " << libusb_error_name(ret);
     }else{
-        cout << "Interface: " << config_desc->bNumInterfaces << endl;
+        qDebug() << "Interface: " << config_desc->bNumInterfaces << endl;
     }
-    cout << "*********************************************************" << endl;
+    qDebug() << "*********************************************************" << endl;
 }
 
 int *get_vid_pid(libusb_device *dev) {
@@ -45,7 +45,7 @@ int *get_vid_pid(libusb_device *dev) {
 
     ret = libusb_get_device_descriptor(dev, &dev_desc);
     if (ret < 0) {
-        cout << "error in detting device descriptor" << libusb_error_name(ret) << endl;
+        qDebug() << "error in detting device descriptor" << libusb_error_name(ret) << endl;
         vid_pid[0] = EXIT_FAILURE;
         vid_pid[1] = EXIT_FAILURE;
         return vid_pid;
@@ -65,7 +65,7 @@ int uninstall_device(libusb_device *dev) {
     libusb_open(dev, &handle);
     ret = libusb_detach_kernel_driver(handle, 0);
     if (ret < 0) {
-        cout << "Error in detach kernel driver to device " << dev << ": " << libusb_error_name(ret) <<endl;
+        qDebug() << "Error in detach kernel driver to device " << dev << ": " << libusb_error_name(ret) <<endl;
         libusb_close(handle);
         return ret;
     }else{
@@ -83,7 +83,7 @@ int install_device(libusb_device *dev) {
     libusb_open(dev, &handle);
     ret = libusb_attach_kernel_driver(handle, 0);
     if (ret < 0) {
-        cout << "Error in attach kernel driver to device " << dev << ": " << libusb_error_name(ret) <<endl;
+        qDebug() << "Error in attach kernel driver to device " << dev << ": " << libusb_error_name(ret) <<endl;
         libusb_close(handle);
         return ret;
     }else{
@@ -100,11 +100,11 @@ libusb_device *get_device_by_vid_pid(libusb_device **devs, int vid, int pid) {
     while(devs[i]){
         ret = libusb_get_device_descriptor(devs[i], &dev_desc);
         if (ret < 0) {
-            cout << "Error Code in libusb_get_config_descriptor of device " << i << " : " << libusb_error_name(ret);
+            qDebug() << "Error Code in libusb_get_config_descriptor of device " << i << " : " << libusb_error_name(ret);
             i++;
         }else {
             if (vid == dev_desc.idVendor && pid == dev_desc.idProduct) {
-                cout << "correct";
+                qDebug() << "correct";
                 return devs[i];
             }else {
                 i++;
@@ -122,7 +122,7 @@ libusb_device *get_device_by_vid_pid_2(libusb_device **devs, int vid, int pid, l
     ssize_t list;
     ret = libusb_get_device_list(context, &devs);
     if (ret < 0) {
-        cout << "Libusb get device list error: " << libusb_error_name(ret) << endl;
+        qDebug() << "Libusb get device list error: " << libusb_error_name(ret) << endl;
         libusb_free_device_list(devs, 1);
         libusb_exit(context);
 
@@ -133,11 +133,11 @@ libusb_device *get_device_by_vid_pid_2(libusb_device **devs, int vid, int pid, l
     for(i; i < list; i++){
         ret = libusb_get_device_descriptor(devs[i], &dev_desc);
         if (ret < 0) {
-            cout << "Error Code in libusb_get_config_descriptor of device " << i << " : " << libusb_error_name(ret);
+            qDebug() << "Error Code in libusb_get_config_descriptor of device " << i << " : " << libusb_error_name(ret);
             i++;
         }else {
             if (vid == dev_desc.idVendor && pid == dev_desc.idProduct) {
-                cout << "correct";
+                qDebug() << "correct";
                 return devs[i];
             }else {
                 i++;
@@ -161,10 +161,10 @@ void device_init(libusb_device **&devs) {
         case 1:
             break;
         case LIBUSB_ERROR_NO_DEVICE:
-            cout << "LIBUSB_ERROR_NO_DEVICE";
+            qDebug() << "LIBUSB_ERROR_NO_DEVICE";
             break;
         case LIBUSB_ERROR_NOT_SUPPORTED:
-            cout << "LIBUSB_ERROR_NOT_SUPPORTED";
+            qDebug() << "LIBUSB_ERROR_NOT_SUPPORTED";
             break;
         default:
             break;
@@ -185,26 +185,26 @@ int get_device_list(libusb_device **&devs, libusb_context *&context)
 
     if (!libusb_has_capability(LIBUSB_CAP_HAS_HOTPLUG)) {
         //nonzero if the running library has the capability, 0 otherwise
-        cout << "Hotplug capabilites are not supported on this platform" << endl;
+        qDebug() << "Hotplug capabilites are not supported on this platform" << endl;
         libusb_exit(NULL);
         return EXIT_FAILURE;
     }
     if (!libusb_has_capability(LIBUSB_CAP_SUPPORTS_DETACH_KERNEL_DRIVER)) {
         //nonzero if the running library has the capability, 0 otherwise
-        cout << "Capabilites of detaching kernel driver are not supported on this platform" << endl;
+        qDebug() << "Capabilites of detaching kernel driver are not supported on this platform" << endl;
         libusb_exit(NULL);
         return EXIT_FAILURE;
     }
     if (!libusb_has_capability(LIBUSB_CAP_HAS_HID_ACCESS)) {
         //nonzero if the running library has the capability, 0 otherwise
-        cout << "Capabilites of detaching kernel driver are not supported on this platform" << endl;
+        qDebug() << "Capabilites of detaching kernel driver are not supported on this platform" << endl;
         libusb_exit(NULL);
         return EXIT_FAILURE;
     }
 
     ret = libusb_get_device_list(context, &devs);
     if (ret < 0) {
-        cout << "Libusb get device list error: " << libusb_error_name(ret) << endl;
+        qDebug() << "Libusb get device list error: " << libusb_error_name(ret) << endl;
         libusb_free_device_list(devs, 1);
         libusb_exit(context);
         return EXIT_FAILURE;
@@ -215,7 +215,7 @@ int get_device_list(libusb_device **&devs, libusb_context *&context)
 
     for (i = 0;i < list;i++) {
 
-        cout << i << " ";
+        qDebug() << i << " ";
         //print_devices(devs[i]);
     }
 
