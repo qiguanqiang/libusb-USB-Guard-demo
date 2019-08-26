@@ -41,7 +41,7 @@ public:
     //init and set values
     void init_tree();
     void set_devices(libusb_device **devs);
-    void set_maps(map<libusb_device *, QTreeWidgetItem *> dev_item_map);
+    void set_maps(map<libusb_device *, QTreeWidgetItem *> &dev_item_map);
 
     //functional
     void build_up_tree(libusb_device **devs);

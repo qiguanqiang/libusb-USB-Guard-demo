@@ -13,7 +13,7 @@
 libusb_device **devs;
 libusb_context *context = NULL;
 map<libusb_device*, QTreeWidgetItem*> dev_item_map;
-QList<QTreeWidgetItem*> *items = new QList<QTreeWidgetItem*>;
+QList<QTreeWidgetItem*> *items;
 QTreeWidget* treeWidget;
 
 
@@ -39,12 +39,8 @@ int hotplug_flush_UI(string op, libusb_device *dev) {
         int this_pid = vid_pid[1];
 
         QTreeWidgetItem* item = new QTreeWidgetItem;
-        map<libusb_device*, QTreeWidgetItem*>::iterator parent_iter;
-
 
         qDebug() << this_vid << this_pid;
-        QString str = "new";
-        qDebug() << str;
 
         while(devs[devs_count]) {
             devs_count++;
@@ -56,20 +52,18 @@ int hotplug_flush_UI(string op, libusb_device *dev) {
         item->setText(CLMN_PID,     QString::fromStdString(to_string(this_pid)));
         qDebug() << items->size();
         dev_item_map[dev] = item;
+        int i = 1;
         for(auto iter = dev_item_map.begin(); iter != dev_item_map.end(); iter++) {
             if(iter->first == libusb_get_parent(dev)) {
-
                 iter->second->addChild(item);
                 qDebug() << "insert successfully";
             }
+            qDebug() << dev_item_map.size() << "size";
+            qDebug() << i << "TIMES";
+            i++;
         }
-        treeWidget->clear();
-        treeWidget->insertTopLevelItems(0, *items);
-        treeWidget->show();
 
-//        parent_iter = dev_item_map.find(libusb_get_parent(dev));
-//        parent_iter->second->addChild(item);
-        qDebug() << items->size();
+        qDebug() << "FLushed";
         return EXIT_SUCCESS;
     }
     return EXIT_FAILURE;
@@ -154,6 +148,7 @@ static int hotplug_callback(struct libusb_context *ctx,struct libusb_device *dev
         libusb_free_device_list(devs, 1);
         get_device_list(devs, context);
         hotplug_flush_UI("remove", device);
+        qDebug() << "LEAVED!";
      }
     return EXIT_SUCCESS;
 }

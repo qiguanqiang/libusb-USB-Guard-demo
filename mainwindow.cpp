@@ -15,7 +15,7 @@ void MainWindow::set_devices(libusb_device **devs) {
     this->devs = devs;
 }
 
-void MainWindow::set_maps(map<libusb_device *, QTreeWidgetItem *> dev_item_map) {
+void MainWindow::set_maps(map<libusb_device *, QTreeWidgetItem *> &dev_item_map) {
     this->dev_item_map = dev_item_map;
 }
 
