@@ -24,7 +24,10 @@ class MainWindow : public QMainWindow
 
 private slots:
     void right_click_slot(QPoint);
-
+    void install_slot();
+    void uninstall_slot();
+    void disable_slot();
+    void enable_slot();
 private:
 
 

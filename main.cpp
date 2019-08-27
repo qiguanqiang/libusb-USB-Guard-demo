@@ -67,7 +67,8 @@ int main(int argc, char *argv[])
     }
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  UI  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     w->set_devices(devs);
-
+    //disabler dis;
+    //dis.enable_record(8053,2307);
     w->build_up_tree(devs);
     dev_item_map = w->dev_item_map;
     w->register_sig_slot();

@@ -152,12 +152,16 @@ void MainWindow::right_click_slot(QPoint) {
     //创建action
     int *vid_pid;
     vid_pid = get_vid_pid(this_dev);
+    int vid, pid;
+    vid = vid_pid[0];
+    pid = vid_pid[1];
+
     disabler dis;
     QMenu *menu = new QMenu(treeWidget);
 
-    if(dis.is_device_disabled(vid_pid[0], vid_pid[1]) == DISABLED) {
+    if(dis.is_device_disabled(vid, pid) == DISABLED) {
         QAction *enable_item = new QAction("启用", treeWidget);
-
+        connect(enable_item, SIGNAL(triggered()), this, SLOT(enable_slot()));
         menu->addAction(enable_item);
         menu->move(cursor().pos());
         menu->show();
@@ -168,6 +172,8 @@ void MainWindow::right_click_slot(QPoint) {
         if(libusb_kernel_driver_active(*handle, 0) == 0) { //not using
             QAction *install_item = new QAction("安装", treeWidget);
             QAction *disable_item = new QAction("禁用", treeWidget);
+            connect(install_item, SIGNAL(triggered()), this, SLOT(install_slot()));
+            connect(disable_item, SIGNAL(triggered()), this, SLOT(disable_slot()));
             menu->addAction(install_item);
             menu->addAction(disable_item);
             menu->move(cursor().pos());
@@ -176,7 +182,8 @@ void MainWindow::right_click_slot(QPoint) {
         }else if(libusb_kernel_driver_active(*handle, 0) == 1) { //using
             QAction *uninstall_item = new QAction("卸载", treeWidget);
             QAction *disable_item   = new QAction("禁用", treeWidget);
-            //connect(disable_item, SIGNAL(triggered(bool)), this_item, SLOT(NULL));
+            connect(uninstall_item, SIGNAL(triggered()), this, SLOT(uninstall_slot()));
+            connect(disable_item, SIGNAL(triggered()), this, SLOT(disable_slot()));
 
             menu->addAction(uninstall_item);
             menu->addAction(disable_item);
@@ -184,4 +191,50 @@ void MainWindow::right_click_slot(QPoint) {
             menu->show();
         }
     }
+}
+
+void MainWindow::install_slot() {
+    libusb_device *this_dev;
+    for(auto iter = dev_item_map.begin(); iter != dev_item_map.end(); iter++) {
+        if(iter->second == treeWidget->currentItem()) {
+            this_dev = iter->first;
+        }
+    }
+    install_device(this_dev);
+}
+void MainWindow::uninstall_slot() {
+    libusb_device *this_dev;
+    for(auto iter = dev_item_map.begin(); iter != dev_item_map.end(); iter++) {
+        if(iter->second == treeWidget->currentItem()) {
+            this_dev = iter->first;
+        }
+    }
+    uninstall_device(this_dev);
+}
+void MainWindow::disable_slot() {
+    libusb_device *this_dev;
+    for(auto iter = dev_item_map.begin(); iter != dev_item_map.end(); iter++) {
+        if(iter->second == treeWidget->currentItem()) {
+            this_dev = iter->first;
+        }
+    }
+
+    int *vid_pid;
+    vid_pid = get_vid_pid(this_dev);
+    uninstall_device(this_dev);
+    disabler dis;
+    dis.disable_record(vid_pid[0], vid_pid[1]);
+}
+void MainWindow::enable_slot() {
+    libusb_device *this_dev;
+    for(auto iter = dev_item_map.begin(); iter != dev_item_map.end(); iter++) {
+        if(iter->second == treeWidget->currentItem()) {
+            this_dev = iter->first;
+        }
+    }
+    int *vid_pid;
+    vid_pid = get_vid_pid(this_dev);
+    install_device(this_dev);
+    disabler dis;
+    dis.enable_record(vid_pid[0], vid_pid[1]);
 }

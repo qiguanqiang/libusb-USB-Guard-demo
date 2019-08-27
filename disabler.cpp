@@ -71,13 +71,15 @@ int disabler::enable_record(int vid, int pid) {
             return EXIT_FAILURE;
         }
     }else {
-        for(auto iter = vec.cbegin(); iter != vec.cend(); iter++) {
-            if((*iter).vid != vid || (*iter).pid != pid) {
-                file_out << (*iter).vid << " " << (*iter).pid << endl;
+        for(auto iter = vec.begin(); iter != vec.end(); iter++) {
+            //qDebug() << iter->vid << " " << iter->pid;
+            if(iter->vid != vid || iter->pid != pid) {
+                file_out << iter->vid << " " << iter->pid << endl;
             }
-            file_out.close();
-            return EXIT_SUCCESS;
+
         }
+        file_out.close();
+        return EXIT_SUCCESS;
     }
 }
 

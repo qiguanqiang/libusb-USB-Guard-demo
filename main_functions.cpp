@@ -150,8 +150,18 @@ void device_init(libusb_device **&devs) {
     libusb_device_handle *handle;
     ssize_t i = 0;
     int ret;
+    int *vid_pid;
 
     while(devs[i]){
+        vid_pid = get_vid_pid(devs[i]);
+        int vid, pid;
+        vid = vid_pid[0];
+        pid = vid_pid[1];
+        disabler dis;
+        if(dis.is_device_disabled(vid, pid) == DISABLED) {
+            uninstall_device(devs[i]);
+            break;
+        }
         libusb_open(devs[i], &handle);
         ret = libusb_kernel_driver_active(handle, 0);
         switch (ret) {
