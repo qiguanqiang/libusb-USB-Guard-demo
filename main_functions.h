@@ -1,6 +1,7 @@
 #ifndef MAIN_FUNCTIONS_H
 #define MAIN_FUNCTIONS_H
 
+/* 这个文件声明了一系列无需成员的函数，主要是libusb库相关的操作 */
 
 #include "libusb.h"
 #include "map"

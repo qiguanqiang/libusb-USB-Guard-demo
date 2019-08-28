@@ -1,9 +1,8 @@
 #include "disabler.h"
 
-int disabler::device_in_list(int vid, int pid) {
 
-}
-
+/* 从VID和PID判断设备是否被禁用（存储在文件中）
+    返回值：DISABLED：被禁用了；ENABLED：未被禁用。 */
 int disabler::is_device_disabled(int vid, int pid) {
     dev_dis_info tmp;
 
@@ -22,6 +21,8 @@ int disabler::is_device_disabled(int vid, int pid) {
     return ENABLED;
 }
 
+/* 以追加方式添加设备禁用记录，此函数应在查询设备为ENABLED后才可以使用。
+    返回值：成功则返回EXIT_SUCCESS */
 int disabler::disable_record(int vid, int pid) {
     /*dev_dis_info tmp;
     vector<dev_dis_info> vec;
@@ -45,6 +46,8 @@ int disabler::disable_record(int vid, int pid) {
     return EXIT_SUCCESS;
 }
 
+/* 以追加方式删除设备禁用记录，此函数应在查询设备为DISABLED后才可以使用。
+    返回值：成功则返回EXIT_SUCCESS；失败则返回EXIT_FAILURE */
 int disabler::enable_record(int vid, int pid) {
     dev_dis_info tmp;
     vector<dev_dis_info> vec;

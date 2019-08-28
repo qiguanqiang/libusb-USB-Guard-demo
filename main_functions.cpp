@@ -3,6 +3,8 @@
 #include <iostream>
 using namespace std;
 
+/* 以命令行方式打印设备和其信息
+    参数：设备 */
 void print_devices(libusb_device *dev)
 {
     libusb_device_descriptor dev_desc;
@@ -38,6 +40,7 @@ void print_devices(libusb_device *dev)
     qDebug() << "*********************************************************" << endl;
 }
 
+/* 查询一个设备的 VID 和 PID，参数：设备；返回值：返回一个数组，设备的 VID 和 PID 或者失败。 */
 int *get_vid_pid(libusb_device *dev) {
     libusb_device_descriptor dev_desc;
     int ret;
@@ -56,6 +59,7 @@ int *get_vid_pid(libusb_device *dev) {
     }
 }
 
+/* 以分离内核驱动和设备的方式卸载一个设备。参数：设备。 */
 int uninstall_device(libusb_device *dev) {
     int *vid_pid;
     int ret;
@@ -74,6 +78,7 @@ int uninstall_device(libusb_device *dev) {
     }
 }
 
+/* 以匹配内核驱动和设备的方式安装一个设备。参数：设备。 */
 int install_device(libusb_device *dev) {
     int *vid_pid;
     int ret;
@@ -92,6 +97,8 @@ int install_device(libusb_device *dev) {
     }
 }
 
+/* 根据 VID 和 PID 在设备列表 devs 中获取一个设备。
+    参数：设备列表 devs， 设备的 VID 和 PID */
 libusb_device *get_device_by_vid_pid(libusb_device **devs, int vid, int pid) {
     libusb_device_descriptor dev_desc;
     int ret;
@@ -114,6 +121,8 @@ libusb_device *get_device_by_vid_pid(libusb_device **devs, int vid, int pid) {
 
 }
 
+/* 根据 VID 和 PID 在设备列表 devs 中获取一个设备。
+    参数：设备列表 devs， 设备的 VID 和 PID */
 libusb_device *get_device_by_vid_pid_2(libusb_device **devs, int vid, int pid, libusb_context *context) {
     libusb_device_descriptor dev_desc;
     int ret;
@@ -146,6 +155,9 @@ libusb_device *get_device_by_vid_pid_2(libusb_device **devs, int vid, int pid, l
     }
 }
 
+/* 初始化设备列表，在程序启动时安装未被禁用但未安装的设备，
+    卸载已被禁用但未卸载的设备。
+    参数：设备列表。 */
 void device_init(libusb_device **&devs) {
     libusb_device_handle *handle;
     ssize_t i = 0;
@@ -186,6 +198,8 @@ void device_init(libusb_device **&devs) {
 
 }
 
+/* 获取当前操作系统连接的USB设备列表，包括启用的和禁用的。
+    参数：设备列表 devs 和 操作语境句柄 context。 */
 int get_device_list(libusb_device **&devs, libusb_context *&context)
 {
 
@@ -274,7 +288,9 @@ int get_device_list(libusb_device **&devs, libusb_context *&context)
 
 
 
-
+/* 获取一个设备的类型，通过查询 deviceClass 和 interfaceClass 的方式获取
+    对应的设备类型。
+    参数：设备。 返回值：设备类型。 */
 QString get_device_type(libusb_device* dev) {
     libusb_device_descriptor *dev_desc;
     libusb_config_descriptor *config_desc;

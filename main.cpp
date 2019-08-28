@@ -1,4 +1,10 @@
 
+
+/* 包含一个main函数调用 Qt 的 GUI 制作图形界面和后端操作及写在这个文件
+    的其他函数（因参数需要不能放在其他文件。包括一个设备热插拔监听回调函
+    数、一个线程回调函数和一个热插拔刷新 GUI 的函数。 */
+
+
 /*EXTERNAL LIBRARIES*/
 #include "mainwindow.h"
 #include <QApplication>
@@ -91,12 +97,19 @@ int main(int argc, char *argv[])
 
 
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  FUNCTION of MAIN  @@@@@@@@@@@@@@@@@@@@@@@
+
+/* 在线程中的回调函数，以阻塞方式监听热插拔，与 Qt 的 a.exe() 相冲突故
+    放在线程中 */
 void *listen_hotplug(void *args) {
     while(1) {
         libusb_handle_events(context);
     }
 }
 
+/* 热插拔监听回调函数中刷新 GUI 的函数。主要包括向 QTreeWidget 
+    插入 item 或者删除 item。
+    参数：操作符 op，代表移除或者添加；与 item 对应的设备：dev
+    返回值： 成功则返回EXIT_SUCCESS；失败则返回EXIT_FAILURE */
 int hotplug_flush_UI(string op, libusb_device *dev) {
 
     if(op == "remove") {
@@ -147,6 +160,10 @@ int hotplug_flush_UI(string op, libusb_device *dev) {
     return EXIT_FAILURE;
 }
 
+/* libusb指定的热插拔回调函数，参数必须是这个形式。设备热插拔后会自动获取
+    此设备的信息，可以在回调函数中进行相关操作。
+    这里的操作有：若有设备插入，判断是否是被禁用设备，是则卸载。刷新 GUI
+                若有设备离开，刷新 GUI */
 static int hotplug_callback(struct libusb_context *ctx,struct libusb_device *device,
                             libusb_hotplug_event event, void *user_data) {
     if(event == LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED) {
