@@ -48,14 +48,14 @@ void MainWindow::arange_tree(libusb_device **devs) {
         QTreeWidgetItem *tmp_item = new QTreeWidgetItem;
         vid_pid = get_vid_pid(devs[i]);
 
-        int this_vid = vid_pid[0];//必须复制，否则数组内值会因为未知原因变
-        int this_pid = vid_pid[1];
+        int vid = vid_pid[0];//必须复制，否则数组内值会因为未知原因变
+        int pid = vid_pid[1];
 //        QString str = get_device_type(devs[i]);
 //        qDebug() << str;
         tmp_item->setText(CLMN_DEVICE,  QString::fromStdString(to_string(i)));
         tmp_item->setText(CLMN_TYPE,    "Unresolved");
-        tmp_item->setText(CLMN_VID,     QString::fromStdString(to_string(this_vid)));
-        tmp_item->setText(CLMN_PID,     QString::fromStdString(to_string(this_pid)));
+        tmp_item->setText(CLMN_VID,     QString::fromStdString(to_string(vid)));
+        tmp_item->setText(CLMN_PID,     QString::fromStdString(to_string(pid)));
 
         if(libusb_get_parent(devs[i]) == NULL) {
             items->append(tmp_item);
@@ -100,8 +100,12 @@ void MainWindow::click_item() {
     //创建action
     int *vid_pid;
     vid_pid = get_vid_pid(this_dev);
+    int vid, pid;
+    vid = vid_pid[0];
+    pid = vid_pid[1];
+
     disabler dis;
-    if(dis.is_device_disabled(vid_pid[0], vid_pid[1]) == DISABLED) {
+    if(dis.is_device_disabled(vid, pid) == DISABLED) {
         QMenu *menu = new QMenu(treeWidget);
         QAction enable_item(QString::fromLocal8Bit("启用"), treeWidget);
 
@@ -166,10 +170,10 @@ void MainWindow::right_click_slot(QPoint) {
         menu->move(cursor().pos());
         menu->show();
     }else {                                            //ENABLED
-        libusb_device_handle **handle;
-        libusb_open(this_dev, handle);
+        libusb_device_handle *handle = NULL;
+        libusb_open(this_dev, &handle);
 
-        if(libusb_kernel_driver_active(*handle, 0) == 0) { //not using
+        if(libusb_kernel_driver_active(handle, 0) == 0) { //not using
             QAction *install_item = new QAction("安装", treeWidget);
             QAction *disable_item = new QAction("禁用", treeWidget);
             connect(install_item, SIGNAL(triggered()), this, SLOT(install_slot()));
@@ -179,7 +183,7 @@ void MainWindow::right_click_slot(QPoint) {
             menu->move(cursor().pos());
             menu->show();
 
-        }else if(libusb_kernel_driver_active(*handle, 0) == 1) { //using
+        }else if(libusb_kernel_driver_active(handle, 0) == 1) { //using
             QAction *uninstall_item = new QAction("卸载", treeWidget);
             QAction *disable_item   = new QAction("禁用", treeWidget);
             connect(uninstall_item, SIGNAL(triggered()), this, SLOT(uninstall_slot()));
@@ -221,9 +225,13 @@ void MainWindow::disable_slot() {
 
     int *vid_pid;
     vid_pid = get_vid_pid(this_dev);
+    int vid, pid;
+    vid = vid_pid[0];
+    pid = vid_pid[1];
+
     uninstall_device(this_dev);
     disabler dis;
-    dis.disable_record(vid_pid[0], vid_pid[1]);
+    dis.disable_record(vid, pid);
 }
 void MainWindow::enable_slot() {
     libusb_device *this_dev;
@@ -234,7 +242,11 @@ void MainWindow::enable_slot() {
     }
     int *vid_pid;
     vid_pid = get_vid_pid(this_dev);
+    int vid, pid;
+    vid = vid_pid[0];
+    pid = vid_pid[1];
+
     install_device(this_dev);
     disabler dis;
-    dis.enable_record(vid_pid[0], vid_pid[1]);
+    dis.enable_record(vid, pid);
 }

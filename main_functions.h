@@ -1,7 +1,9 @@
 #ifndef MAIN_FUNCTIONS_H
 #define MAIN_FUNCTIONS_H
 
-#include <libs.h>
+
+#include "libusb.h"
+#include "map"
 #include <disabler.h>
 #include "mainwindow.h"
 

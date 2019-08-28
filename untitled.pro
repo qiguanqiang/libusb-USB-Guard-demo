@@ -18,7 +18,6 @@ SOURCES += main.cpp\
     main_functions.cpp
 
 HEADERS  += mainwindow.h \
-    libs.h \
     disabler.h \
     main_functions.h
 

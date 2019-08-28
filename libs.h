@@ -4,7 +4,7 @@
 #include "iostream"
 #include "libusb.h"
 #include "map"
-//function sleep()
+
 #include "unistd.h"
 
 

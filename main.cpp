@@ -4,10 +4,15 @@
 #include <QApplication>
 #include "QTreeWidget"
 #include "pthread.h"
-#include <disabler.h>
-#include <main_functions.h>
+#include "iostream"
+#include "libusb.h"
+#include "map"
+
+using namespace std;
 
 /*INTERNAL LIBRARIES*/
+#include <disabler.h>
+#include <main_functions.h>
 
 
 libusb_device **devs;
@@ -20,10 +25,9 @@ QTreeWidget* treeWidget;
 static int hotplug_callback(struct libusb_context *ctx,struct libusb_device *device,
                             libusb_hotplug_event event, void *user_data);
 void *listen_hotplug(void *args);
-MainWindow *get_mainwindow(MainWindow *w){
-    return w;
-}
 int hotplug_flush_UI(string op, libusb_device *dev);
+
+
 
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  MAIN FUNCTION  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 int main(int argc, char *argv[])
@@ -67,8 +71,8 @@ int main(int argc, char *argv[])
     }
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  UI  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     w->set_devices(devs);
-    //disabler dis;
-    //dis.enable_record(8053,2307);
+//    disabler dis;
+//    dis.enable_record(8053,2307);
     w->build_up_tree(devs);
     dev_item_map = w->dev_item_map;
     w->register_sig_slot();

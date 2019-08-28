@@ -5,7 +5,9 @@
 #include <QTreeWidget>
 #include <QMenu>
 #include <QDebug>
-#include <libs.h>
+#include "libusb.h"
+#include "map"
+
 #include <disabler.h>
 #include <main_functions.h>
 

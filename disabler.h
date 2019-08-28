@@ -4,6 +4,10 @@
 #include "libs.h"
 #include "vector"
 #include "fstream"
+#include "iostream"
+#include "libusb.h"
+
+using namespace std;
 //#include "mainwindow.h"
 
 #define DISABLE_LIST_FILE_PATH "disable_list"
