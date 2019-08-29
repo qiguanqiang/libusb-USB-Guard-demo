@@ -9,6 +9,9 @@
 #include <QDebug>
 #include "libusb.h"
 #include "map"
+#include "QtSql/QSqlDatabase"
+#include "QtSql/QSqlRecord"
+#include "QtSql/QSqlQuery"
 
 #include <disabler.h>
 #include <main_functions.h>
@@ -36,7 +39,7 @@ private slots:
     void enable_slot();             //点击菜单选项槽函数，执行启用设备操作
 
 private:
-
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
 public:
     libusb_device **devs;
     QTreeWidget* treeWidget = new QTreeWidget(this);

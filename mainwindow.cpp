@@ -214,6 +214,23 @@ void MainWindow::uninstall_slot() {
         }
     }
     uninstall_device(this_dev);
+
+    int *vid_pid;
+    vid_pid = get_vid_pid(this_dev);
+    int vid, pid;
+    vid = vid_pid[0];
+    pid = vid_pid[1];
+    db.setDatabaseName("ri_guard_usb_manager.sql");
+    if(!db.open()) {
+        qDebug() << db.lastError();
+    }else {
+        QSqlQuery query;
+        query.exec("create table record(device text primary key, operation text, time text)");
+
+        query.exec("insert into record values(" + vid + "&" + pid + ","
+                                                + "uninstall,"
+                                                + "")
+    }
 }
 void MainWindow::disable_slot() {
     libusb_device *this_dev;
