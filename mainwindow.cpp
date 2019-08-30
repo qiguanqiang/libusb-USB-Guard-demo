@@ -3,6 +3,7 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
+    db.setDatabaseName("ri_guard_usb_manager.db");
 }
 
 MainWindow::~MainWindow()
@@ -205,6 +206,14 @@ void MainWindow::install_slot() {
         }
     }
     install_device(this_dev);
+
+    int *vid_pid;
+    vid_pid = get_vid_pid(this_dev);
+    int vid, pid;
+    vid = vid_pid[0];
+    pid = vid_pid[1];
+
+    sqlite_record("install", vid, pid);
 }
 void MainWindow::uninstall_slot() {
     libusb_device *this_dev;
@@ -220,17 +229,8 @@ void MainWindow::uninstall_slot() {
     int vid, pid;
     vid = vid_pid[0];
     pid = vid_pid[1];
-    db.setDatabaseName("ri_guard_usb_manager.sql");
-    if(!db.open()) {
-        qDebug() << db.lastError();
-    }else {
-        QSqlQuery query;
-        query.exec("create table record(device text primary key, operation text, time text)");
 
-        query.exec("insert into record values(" + vid + "&" + pid + ","
-                                                + "uninstall,"
-                                                + "")
-    }
+    sqlite_record("uninstall", vid, pid);
 }
 void MainWindow::disable_slot() {
     libusb_device *this_dev;
@@ -249,6 +249,7 @@ void MainWindow::disable_slot() {
     uninstall_device(this_dev);
     disabler dis;
     dis.disable_record(vid, pid);
+    sqlite_record("disable", vid, pid);
 }
 void MainWindow::enable_slot() {
     libusb_device *this_dev;
@@ -266,4 +267,31 @@ void MainWindow::enable_slot() {
     install_device(this_dev);
     disabler dis;
     dis.enable_record(vid, pid);
+    sqlite_record("enable", vid, pid);
+}
+void MainWindow::sqlite_record(QString operation, int vid, int pid) {
+    if(!db.open()) {
+        qDebug() << db.lastError();
+    }else {
+        QSqlQuery query;
+        query.exec("create table record(time text primary key, operation text, vid text, pid text)");
+        QDateTime current_date_time = QDateTime::currentDateTime();
+        QString current_date =current_date_time.toString("yyyy.MM.dd hh:mm:ss.zzz ddd");
+        query.prepare("insert into record(time, operation, vid, pid) values (:time, :operation, :vid, :pid)");
+        query.bindValue(":time",        current_date);
+        query.bindValue(":operation",   operation);
+        query.bindValue(":vid",         QString::number(vid));
+        query.bindValue(":pid",         QString::number(pid));
+        query.exec();
+
+        query.exec("select * from record");
+        while(query.next())
+        {
+            QString show_time       = query.value(0).toString();
+            QString show_operation  = query.value(1).toString();
+            QString show_vid        = query.value(2).toString();
+            QString show_pid        = query.value(3).toString();
+            qDebug()<<QString("time:%1 operation:%2 device:%3_%4").arg(show_time).arg(show_operation).arg(show_vid).arg(show_pid);
+        }
+    }
 }

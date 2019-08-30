@@ -12,6 +12,8 @@
 #include "QtSql/QSqlDatabase"
 #include "QtSql/QSqlRecord"
 #include "QtSql/QSqlQuery"
+#include "QtSql/QSqlError"
+#include "QDateTime"
 
 #include <disabler.h>
 #include <main_functions.h>
@@ -40,6 +42,7 @@ private slots:
 
 private:
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+    void sqlite_record(QString operation, int vid, int pid);
 public:
     libusb_device **devs;
     QTreeWidget* treeWidget = new QTreeWidget(this);
