@@ -40,11 +40,11 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     MainWindow *w = new MainWindow;
+    a.setApplicationName("Ri-Guard USB Manager");
 
     int ret;
 
     pthread_t listener;
-
 
     ret = libusb_init(&context);
     if (ret < 0) {

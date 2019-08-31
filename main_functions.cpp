@@ -292,7 +292,7 @@ int get_device_list(libusb_device **&devs, libusb_context *&context)
     对应的设备类型。
     参数：设备。 返回值：设备类型。 */
 QString get_device_type(libusb_device* dev) {
-    libusb_device_descriptor *dev_desc;
+    libusb_device_descriptor dev_desc;
     libusb_config_descriptor *config_desc;
     const libusb_interface *interface;
     //const libusb_interface_descriptor *interface_desc;
@@ -300,19 +300,17 @@ QString get_device_type(libusb_device* dev) {
     //libusb_device_handle *handle = NULL;
     int ret;
     int dev_class, if_class;
-    QString type;
 
-    ret = libusb_get_device_descriptor(dev, dev_desc);
+    ret = libusb_get_device_descriptor(dev, &dev_desc);
     if (ret < 0) {
         qDebug() << "error in detting device descriptor" << libusb_error_name(ret) << endl;
         return "get_device_desc failed";
     }
-    dev_class = dev_desc->bDeviceClass;
+    dev_class = dev_desc.bDeviceClass;
 
     ret = libusb_get_config_descriptor(dev, 0, &config_desc);
-//    interface = &config_desc->interface[0];
-//    if_class = interface->altsetting[0].bInterfaceClass;
-    if_class = 1;
+    interface = &config_desc->interface[0];
+    if_class = interface->altsetting[0].bInterfaceClass;
 
     switch (dev_class) {
         case 0:

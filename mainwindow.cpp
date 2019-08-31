@@ -54,7 +54,7 @@ void MainWindow::arange_tree(libusb_device **devs) {
 //        QString str = get_device_type(devs[i]);
 //        qDebug() << str;
         tmp_item->setText(CLMN_DEVICE,  QString::fromStdString(to_string(i)));
-        tmp_item->setText(CLMN_TYPE,    "Unresolved");
+        tmp_item->setText(CLMN_TYPE,    get_device_type(devs[i]));
         tmp_item->setText(CLMN_VID,     QString::fromStdString(to_string(vid)));
         tmp_item->setText(CLMN_PID,     QString::fromStdString(to_string(pid)));
 
