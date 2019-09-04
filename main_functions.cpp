@@ -55,7 +55,12 @@ int *get_vid_pid(libusb_device *dev) {
     }else{
         vid_pid[0] = dev_desc.idVendor;
         vid_pid[1] = dev_desc.idProduct;
-        return vid_pid;
+
+        int* temp = new int[2];
+        for(int i =0; i < 2; i++) {
+            temp[i] = (int)vid_pid[i];
+        }
+        return temp;
     }
 }
 
