@@ -10,6 +10,13 @@
 #include "fstream"
 #include "iostream"
 #include "libusb.h"
+#include "QtSql/QSqlDatabase"
+#include "QtSql/QSqlRecord"
+#include "QtSql/QSqlQuery"
+#include "QtSql/QSqlError"
+#include "QDateTime"
+#include "QVariant"
+#include "QDebug"
 
 using namespace std;
 //#include "mainwindow.h"
@@ -45,8 +52,10 @@ struct dev_dis_info {
 
 class disabler {
 private:
+    QSqlDatabase db;
 
 public:
+    disabler();
     int is_device_disabled(int vid, int pid);
     int disable_record(int vid, int pid);
     int enable_record(int vid, int pid);
